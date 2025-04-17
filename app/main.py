@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Qdrant 클라이언트 설정 - 환경변수 또는 기본값 사용
-QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 qdrant_client = QdrantClient(url=QDRANT_URL)
 
 # 컬렉션 이름
