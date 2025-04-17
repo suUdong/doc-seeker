@@ -1,0 +1,77 @@
+import requests
+import json
+
+# API 엔드포인트
+BASE_URL = "http://localhost:8000"  # 도커 컨테이너에서 FastAPI가 실행 중인 포트
+
+def test_health():
+    """서비스 상태 확인 테스트"""
+    response = requests.get(f"{BASE_URL}/health/")
+    print(f"[상태 확인] 상태 코드: {response.status_code}, 응답: {response.json()}")
+
+def add_sample_documents():
+    """샘플 문서 추가 테스트"""
+    documents = [
+        {
+            "title": "품질 관리 프로세스",
+            "content": "품질 관리 프로세스는 제품이나 서비스의 품질을 향상시키고 유지하기 위한 체계적인 방법입니다. 이 프로세스는 계획, 실행, 검토, 개선의 단계로 구성되며, PDCA(Plan-Do-Check-Act) 사이클을 통해 지속적인 개선을 추구합니다.",
+            "source": "업무 매뉴얼 1장"
+        },
+        {
+            "title": "고객 서비스 가이드라인",
+            "content": "고객 서비스는 회사의 최우선 가치입니다. 모든 고객 문의는 24시간 이내에 응답해야 하며, 문제 해결은 최대 3일 이내에 완료되어야 합니다. 고객 만족도 조사는 분기별로 실시되며, 피드백을 바탕으로 서비스 개선을 지속적으로 진행합니다.",
+            "source": "업무 매뉴얼 2장"
+        },
+        {
+            "title": "신입 사원 온보딩 절차",
+            "content": "신입 사원 온보딩은 입사 첫날부터 3개월 동안 진행됩니다. 첫 주는 회사 소개 및 기본 교육이 진행되며, 두 번째 주부터는 부서별 업무 교육이 시작됩니다. 모든 신입 사원에게는 멘토가 배정되어 업무적응을 돕습니다.",
+            "source": "인사 규정 1-3절"
+        },
+        {
+            "title": "연간 마케팅 계획",
+            "content": "연간 마케팅 계획은 전년도 12월에 수립됩니다. 분기별 목표와 예산 배분을 포함하며, 디지털 마케팅과 오프라인 마케팅의 균형을 고려합니다. 각 캠페인의 효과는 월간 미팅에서 검토되며, 필요시 전략을 조정합니다.",
+            "source": "마케팅 플랜 2023"
+        },
+        {
+            "title": "보안 정책",
+            "content": "모든 직원은 분기별 보안 교육을 이수해야 합니다. 회사 장비는 개인 용도로 사용할 수 없으며, 모든 비밀번호는 90일마다 변경해야 합니다. 외부 방문자는 보안 등록을 완료해야 하며, 모든 회의실에서는 보안 문서를 남겨두지 않아야 합니다.",
+            "source": "보안 규정 2023"
+        }
+    ]
+    
+    for doc in documents:
+        response = requests.post(f"{BASE_URL}/documents/", json=doc)
+        print(f"[문서 추가] 제목: {doc['title']}, 상태 코드: {response.status_code}, 응답: {response.json()}")
+
+def test_search():
+    """문서 검색 테스트"""
+    test_queries = [
+        {"query": "품질 관리는 어떻게 진행되나요?", "limit": 2},
+        {"query": "신입 사원 교육 과정이 궁금합니다", "limit": 2},
+        {"query": "보안 정책에 대해 알려주세요", "limit": 1},
+        {"query": "고객 서비스 응답 시간은 얼마인가요?", "limit": 3}
+    ]
+    
+    for query in test_queries:
+        response = requests.post(f"{BASE_URL}/search/", json=query)
+        print(f"\n[검색 쿼리] {query['query']}")
+        print(f"상태 코드: {response.status_code}")
+        
+        if response.status_code == 200:
+            results = response.json()
+            print(f"검색 결과 ({len(results)}개):")
+            for i, result in enumerate(results, 1):
+                print(f"  결과 {i}:")
+                print(f"  - 내용: {result['content'][:100]}...")
+                print(f"  - 점수: {result['score']:.4f}")
+                print(f"  - 출처: {result['source']}\n")
+
+if __name__ == "__main__":
+    # 서비스 상태 확인
+    test_health()
+    
+    # 샘플 문서 추가
+    add_sample_documents()
+    
+    # 문서 검색 테스트
+    test_search() 
