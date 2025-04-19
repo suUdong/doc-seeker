@@ -25,6 +25,8 @@ services:
       - ./requirements.txt:/app/requirements.txt
     environment:
       - QDRANT_URL=http://qdrant:6333
+      - OMP_NUM_THREADS=1
+      - PYTHONUNBUFFERED=1
 
 volumes:
   qdrant_data:

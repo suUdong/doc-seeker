@@ -1,35 +1,19 @@
-# FastAPI 및 웹 서버
-fastapi==0.115.12
+# 필수 패키지만 최소한으로 포함
+fastapi==0.110.0
 uvicorn==0.34.1
 pydantic==2.11.3
-# starlette 버전은 제거하여 fastapi가 호환되는 버전을 사용하도록 함
 
 # Qdrant 벡터 데이터베이스
 qdrant-client==1.9.1
 
 # 임베딩 및 AI 모델
-sentence-transformers==2.4.0
+sentence-transformers==2.5.1
 torch==2.2.1
 
-# 유틸리티
-numpy==2.2.4
-requests==2.32.3
-python-dotenv==1.0.0
-tqdm==4.66.2
-packaging==24.2
+# 호환성 문제 해결
+scikit-learn==1.2.2
+threadpoolctl==3.1.0
 
-# CORS 지원
-typing_extensions==4.13.2
-
-# 데이터 처리
-pandas==2.2.1
-
-# 데이터베이스
-asyncpg==0.30.0
-
-# 그 외 필요한 의존성
-click==8.1.8
-colorama==0.4.6
-filelock==3.18.0
-jinja2==3.1.6
-joblib==1.4.2
+# 기본 유틸리티
+numpy==1.24.4
+requests==2.31.0
