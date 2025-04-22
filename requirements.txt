@@ -9,6 +9,9 @@ qdrant-client==1.9.1
 # 임베딩 및 AI 모델
 sentence-transformers==2.5.1
 torch==2.2.1
+ctransformers==0.2.27
+huggingface-hub==0.20.3
+# llama-cpp-python 패키지는 Dockerfile에서 바이너리로 직접 설치
 
 # 호환성 문제 해결
 scikit-learn==1.2.2

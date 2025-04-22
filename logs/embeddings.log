@@ -1,0 +1,104 @@
+2025-04-19 08:33:20,306 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-19 08:33:20,307 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-19 08:33:23,531 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-04-19 08:33:28,545 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-19 08:33:28,547 - embeddings - INFO - 모델 로딩 완료: 8.24초 소요
+2025-04-19 08:33:28,599 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-19 08:33:54,642 - embeddings - INFO - 임베딩 생성 완료: 길이 133자, 차원 384, 소요시간 0.0804초
+2025-04-19 08:33:54,649 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/count "HTTP/1.1 200 OK"
+2025-04-19 08:33:54,660 - httpx - INFO - HTTP Request: PUT http://qdrant:6333/collections/documents/points?wait=true "HTTP/1.1 200 OK"
+2025-04-19 08:34:09,401 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0114초
+2025-04-19 08:34:09,414 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:14,349 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0117초
+2025-04-19 08:34:14,352 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:14,814 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0108초
+2025-04-19 08:34:14,816 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:15,197 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0113초
+2025-04-19 08:34:15,200 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:15,442 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0128초
+2025-04-19 08:34:15,451 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:15,655 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0128초
+2025-04-19 08:34:15,657 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:15,858 - embeddings - INFO - 임베딩 생성 완료: 길이 17자, 차원 384, 소요시간 0.0106초
+2025-04-19 08:34:15,861 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:20,752 - embeddings - INFO - 임베딩 생성 완료: 길이 18자, 차원 384, 소요시간 0.0179초
+2025-04-19 08:34:20,756 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:21,323 - embeddings - INFO - 임베딩 생성 완료: 길이 18자, 차원 384, 소요시간 0.0197초
+2025-04-19 08:34:21,325 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:21,609 - embeddings - INFO - 임베딩 생성 완료: 길이 18자, 차원 384, 소요시간 0.0180초
+2025-04-19 08:34:21,611 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:23,981 - embeddings - INFO - 임베딩 생성 완료: 길이 18자, 차원 384, 소요시간 0.0150초
+2025-04-19 08:34:23,984 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:25,519 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0132초
+2025-04-19 08:34:25,521 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:26,249 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0135초
+2025-04-19 08:34:26,253 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:26,502 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0127초
+2025-04-19 08:34:26,504 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:26,690 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0141초
+2025-04-19 08:34:26,692 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:26,866 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0147초
+2025-04-19 08:34:26,869 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:27,084 - embeddings - INFO - 임베딩 생성 완료: 길이 15자, 차원 384, 소요시간 0.0162초
+2025-04-19 08:34:27,086 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:29,267 - embeddings - INFO - 임베딩 생성 완료: 길이 20자, 차원 384, 소요시간 0.0161초
+2025-04-19 08:34:29,270 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:29,523 - embeddings - INFO - 임베딩 생성 완료: 길이 20자, 차원 384, 소요시간 0.0154초
+2025-04-19 08:34:29,527 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-19 08:34:29,708 - embeddings - INFO - 임베딩 생성 완료: 길이 20자, 차원 384, 소요시간 0.0147초
+2025-04-19 08:34:29,711 - httpx - INFO - HTTP Request: POST http://qdrant:6333/collections/documents/points/search "HTTP/1.1 200 OK"
+2025-04-22 02:06:41,648 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:06:41,648 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:06:45,069 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:06:45,070 - embeddings - INFO - 모델 로딩 완료: 3.42초 소요
+2025-04-22 02:06:45,114 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:12:42,523 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:12:42,524 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:12:45,395 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:12:45,396 - embeddings - INFO - 모델 로딩 완료: 2.87초 소요
+2025-04-22 02:12:45,441 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:13:09,071 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:13:09,071 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:13:11,763 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:13:11,764 - embeddings - INFO - 모델 로딩 완료: 2.69초 소요
+2025-04-22 02:13:11,796 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:13:20,897 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:13:20,897 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:13:23,783 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:13:23,784 - embeddings - INFO - 모델 로딩 완료: 2.89초 소요
+2025-04-22 02:13:23,821 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:39:53,136 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:39:53,136 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:39:56,752 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:39:56,754 - embeddings - INFO - 모델 로딩 완료: 3.62초 소요
+2025-04-22 02:39:56,797 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:40:10,408 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:40:10,408 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:40:12,902 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:40:12,903 - embeddings - INFO - 모델 로딩 완료: 2.49초 소요
+2025-04-22 02:40:12,936 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:40:14,968 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:40:14,968 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:40:17,979 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:40:17,980 - embeddings - INFO - 모델 로딩 완료: 3.01초 소요
+2025-04-22 02:40:18,014 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:42:11,927 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:42:11,927 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:42:14,779 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:42:14,780 - embeddings - INFO - 모델 로딩 완료: 2.85초 소요
+2025-04-22 02:42:14,811 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:42:34,629 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:42:34,629 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:42:37,473 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:42:37,474 - embeddings - INFO - 모델 로딩 완료: 2.85초 소요
+2025-04-22 02:42:37,511 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:42:56,415 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:42:56,415 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:42:59,154 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:42:59,156 - embeddings - INFO - 모델 로딩 완료: 2.74초 소요
+2025-04-22 02:42:59,188 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"
+2025-04-22 02:43:19,177 - embeddings - INFO - SentenceTransformer 모델 로딩 시작
+2025-04-22 02:43:19,178 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-22 02:43:22,171 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-22 02:43:22,172 - embeddings - INFO - 모델 로딩 완료: 2.99초 소요
+2025-04-22 02:43:22,208 - httpx - INFO - HTTP Request: GET http://qdrant:6333/collections "HTTP/1.1 200 OK"

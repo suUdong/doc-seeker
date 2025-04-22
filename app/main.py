@@ -1,128 +1,109 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
 import os
+from fastapi import FastAPI, HTTPException, Depends, Query
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
-from app.embeddings import embed_text
+# 중앙화된 로깅 설정 사용
+from .logger import get_logger
+logger = get_logger('app')
 
-# FastAPI 앱 인스턴스 생성
-app = FastAPI(title="문서 검색 API", description="RAG 시스템을 이용한 문서 검색 API")
+# 임베딩 및 검색 모듈
+from .embedding import get_query_embedding, document_embedding_exists
+from .retrieval import search_documents
 
-# CORS 설정
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# 응답 생성 모듈
+from .generation import generate_response
+
+# 모델 관리자
+from .model_manager import model_manager
+
+# API 모델 정의
+class QueryRequest(BaseModel):
+    query: str = Field(..., description="사용자 질문")
+    top_k: int = Field(default=3, description="검색할 최대 문서 수")
+    max_tokens: int = Field(default=512, description="생성할 최대 토큰 수")
+
+class QueryResponse(BaseModel):
+    answer: str = Field(..., description="생성된 응답")
+    sources: List[dict] = Field(..., description="참고한 문서 소스 목록")
+    
+class HealthResponse(BaseModel):
+    status: str = Field(..., description="서비스 상태")
+    model_info: dict = Field(..., description="모델 정보")
+
+# FastAPI 애플리케이션 초기화
+app = FastAPI(
+    title="Document Search & QA API",
+    description="문서 검색 및 질의응답 API",
+    version="0.1.0"
 )
 
-# Qdrant 클라이언트 설정 - 환경변수 또는 기본값 사용
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-qdrant_client = QdrantClient(url=QDRANT_URL)
-
-# 컬렉션 이름
-COLLECTION_NAME = "documents"
-
-# 컬렉션 초기화 함수
-@app.on_event("startup")
-async def startup_db_client():
-    try:
-        collections = qdrant_client.get_collections().collections
-        collection_names = [collection.name for collection in collections]
-        
-        if COLLECTION_NAME not in collection_names:
-            # 컬렉션 생성
-            qdrant_client.create_collection(
-                collection_name=COLLECTION_NAME,
-                vectors_config=models.VectorParams(
-                    size=384,  # all-MiniLM-L6-v2 모델의 임베딩 차원
-                    distance=models.Distance.COSINE
-                )
-            )
-            print(f"컬렉션 '{COLLECTION_NAME}'가 생성되었습니다.")
-    except Exception as e:
-        print(f"시작 오류: {e}")
-
-
-# 요청/응답 모델 정의
-class DocumentIn(BaseModel):
-    title: str
-    content: str
-    source: Optional[str] = None
-
-
-class QueryIn(BaseModel):
-    query: str
-    limit: int = 5
-
-
-class QueryResult(BaseModel):
-    content: str
-    score: float
-    source: Optional[str] = None
-
-
-@app.post("/documents/", status_code=201)
-async def add_document(document: DocumentIn):
-    """문서를 추가하고 벡터 데이터베이스에 저장합니다."""
-    try:
-        # 문서 내용을 임베딩
-        embedding = embed_text(document.content)
-        
-        # Qdrant에 문서 저장
-        qdrant_client.upsert(
-            collection_name=COLLECTION_NAME,
-            points=[
-                models.PointStruct(
-                    id=qdrant_client.count(collection_name=COLLECTION_NAME).count + 1,
-                    vector=embedding,
-                    payload={
-                        "title": document.title,
-                        "content": document.content,
-                        "source": document.source
-                    }
-                )
-            ]
-        )
-        
-        return {"message": "문서가 성공적으로 추가되었습니다."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"문서 추가 중 오류 발생: {str(e)}")
-
-
-@app.post("/search/", response_model=List[QueryResult])
-async def search_documents(query: QueryIn):
-    """쿼리와 관련된 문서를 검색합니다."""
-    try:
-        # 쿼리 임베딩
-        query_embedding = embed_text(query.query)
-        
-        # Qdrant에서 유사한 문서 검색
-        search_results = qdrant_client.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=query_embedding,
-            limit=query.limit
-        )
-        
-        # 결과 변환
-        results = []
-        for result in search_results:
-            results.append(QueryResult(
-                content=result.payload.get("content"),
-                score=result.score,
-                source=result.payload.get("source")
-            ))
-        
-        return results
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"검색 중 오류 발생: {str(e)}")
-
-
-@app.get("/health/")
+# 헬스체크 엔드포인트
+@app.get("/health/", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     """서비스 상태 확인"""
-    return {"status": "healthy"}
+    # 모델 정보 가져오기
+    model_info = model_manager.get_model_info()
+    
+    return {
+        "status": "ok",
+        "model_info": model_info
+    }
+
+# 질의응답 엔드포인트
+@app.post("/api/query/", response_model=QueryResponse, tags=["Query"])
+async def query(request: QueryRequest):
+    """
+    사용자 질문에 대한 응답을 생성합니다.
+    """
+    try:
+        query = request.query
+        logger.info(f"질문 접수: {query}")
+        
+        # 임베딩 존재 여부 확인
+        if not document_embedding_exists():
+            logger.error("문서 임베딩이 없습니다.")
+            raise HTTPException(status_code=500, detail="문서 임베딩이 준비되지 않았습니다.")
+        
+        # 쿼리 임베딩 생성 및 관련 문서 검색
+        query_vector = get_query_embedding(query)
+        search_results = search_documents(query_vector, limit=request.top_k)
+        
+        # 검색 결과가 없는 경우
+        if not search_results:
+            logger.warning("검색 결과가 없습니다.")
+            return {"answer": "죄송합니다. 질문에 관련된 문서를 찾지 못했습니다.", "sources": []}
+        
+        # 검색된 문서 콘텐츠 추출
+        context_chunks = [result["content"] for result in search_results]
+        
+        # 응답 생성
+        answer = generate_response(query, context_chunks, request.max_tokens)
+        
+        # 검색 결과에서 소스 정보만 추출
+        sources = []
+        for result in search_results:
+            source = {
+                "title": result.get("metadata", {}).get("title", "제목 없음"),
+                "url": result.get("metadata", {}).get("url", ""),
+                "score": result.get("score", 0)
+            }
+            sources.append(source)
+        
+        return {"answer": answer, "sources": sources}
+        
+    except Exception as e:
+        logger.error(f"처리 중 오류 발생: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"질의 처리 중 오류가 발생했습니다: {str(e)}")
+
+# 루트 엔드포인트
+@app.get("/")
+async def root():
+    return {"message": "Document Search & QA API"}
+
+# 애플리케이션 시작 시 모델 로드 시도
+@app.on_event("startup")
+async def startup_event():
+    # 모델 로드 시도
+    logger.info("애플리케이션 시작: 모델 로드 시도")
+    model_manager.load_model()
