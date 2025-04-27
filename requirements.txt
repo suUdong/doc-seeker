@@ -1,22 +1,38 @@
 # 필수 패키지만 최소한으로 포함
 fastapi==0.110.0
 uvicorn==0.34.1
+python-multipart==0.0.6
+
+# 데이터 처리
+numpy==1.24.4
+pandas==2.0.3
 pydantic==2.11.3
 
-# Qdrant 벡터 데이터베이스
+# 파일 처리
+pypdf==3.15.0
+
+# 벡터 저장소
 qdrant-client==1.9.1
 
-# 임베딩 및 AI 모델
-sentence-transformers==2.5.1
+# LLM 및 임베딩
+transformers==4.34.0
 torch==2.2.1
-ctransformers==0.2.27
-huggingface-hub==0.20.3
-# llama-cpp-python 패키지는 Dockerfile에서 바이너리로 직접 설치
+# huggingface-hub의 버전을 명시하지 않고 호환성 있는 버전이 설치되도록 함
+huggingface-hub>=0.16.4,<1.0
+sentence-transformers==2.5.1
+accelerate==0.25.0
+
+# 유틸리티
+python-dotenv==1.0.0
+loguru==0.7.0
 
 # 호환성 문제 해결
 scikit-learn==1.2.2
 threadpoolctl==3.1.0
 
 # 기본 유틸리티
-numpy==1.24.4
 requests==2.31.0
+
+# 텍스트 처리 및 LLM
+ctransformers==0.2.27
+# llama-cpp-python 패키지는 Dockerfile에서 바이너리로 직접 설치

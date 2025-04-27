@@ -18,11 +18,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 필수 패키지만 설치 (torch 등 모든 의존성 포함)
 COPY requirements.txt .
 
-# llama-cpp-python 바이너리 패키지 사용 (컴파일 필요 없음)
-RUN pip install --no-cache-dir -r requirements.txt \
-    ctransformers==0.2.27 \
-    huggingface-hub==0.20.3 \
-    --find-links https://github.com/jllllll/llama-cpp-python-cuBLAS-wheels/releases/download/textgen-webui/llama_cpp_python-0.2.55+cpuavx2-cp310-cp310-linux_x86_64.whl
+# pip 설정 파일 생성 - 타임아웃 증가 및 재시도 설정
+RUN mkdir -p /root/.config/pip && \
+    echo "[global]\ntimeout = 180\nretries = 5\ntrusted-host = files.pythonhosted.org pypi.org" > /root/.config/pip/pip.conf
+
+# 패키지 분할 설치 (안정성 향상)
+# 먼저 필수 패키지 설치
+RUN pip install pip --upgrade && \
+    pip install setuptools wheel && \
+    pip install -r requirements.txt
+
+# 추가 패키지 설치
+RUN pip install ctransformers==0.2.27 huggingface-hub==0.20.3
+
+# llama-cpp-python 패키지 설치 (별도 명령으로 분리)
+RUN pip install llama-cpp-python==0.2.55 --find-links https://github.com/jllllll/llama-cpp-python-cuBLAS-wheels/releases/download/textgen-webui/llama_cpp_python-0.2.55+cpuavx2-cp310-cp310-linux_x86_64.whl || \
+    pip install llama-cpp-python==0.2.55
 
 # 모델 및 로그 디렉토리 생성
 RUN mkdir -p models logs

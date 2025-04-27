@@ -1,87 +1,153 @@
+from pathlib import Path
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import numpy as np
 import os
 import time
-from ctransformers import AutoModelForCausalLM
-from pathlib import Path
+import logging
+from sentence_transformers import SentenceTransformer
 
-# 중앙화된 로깅 설정 사용
-from .logger import get_logger
-logger = get_logger('model_manager')
+# 로깅 설정
+from app.logger import get_logger
+logger = get_logger("model_manager")
 
 class ModelManager:
-    """
-    LLM 모델의 로딩, 관리, 정보 제공을 담당하는 클래스
-    """
+    """모델 관리 클래스"""
     
-    # 모델 설정
+    # 기본 모델 설정
     MODEL_NAME = "EleutherAI/polyglot-ko-1.3b"
-    MODEL_TYPE = "llama"
+    MODEL_PATH = "/app/models/polyglot-ko-1.3b"
+    EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     
-    def __init__(self):
-        # Docker 환경에서는 /app/models 경로 사용
-        if os.path.exists('/app/models'):
-            self.model_dir = "/app/models"
-        else:
-            # 로컬 개발 환경에서는 상대 경로 사용
-            self.model_dir = os.path.join(os.path.dirname(__file__), "../models")
-            
-        # 디렉토리가 없으면 생성
-        Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-            
-        self.model_path = os.path.join(self.model_dir, "polyglot-ko-1.3b.gguf")
+    def __init__(self, model_path=None):
+        """
+        ModelManager 초기화
+        
+        Args:
+            model_path: 모델 경로 (기본값: None, 기본 경로 사용)
+        """
+        self.model_path = model_path or self.MODEL_PATH
         self.model = None
+        self.tokenizer = None
+        self.embedding_model = None
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
-    def load_model(self):
-        """모델을 로드하고 모델 객체를 반환합니다."""
-        if self.model is not None:
-            return self.model
-            
-        logger.info(f"{self.MODEL_NAME} 모델 로딩 시작")
-        start_time = time.time()
-        
-        # 모델 파일이 없으면 다운로드 시도
-        if not os.path.exists(self.model_path):
-            logger.warning(f"모델 파일을 찾을 수 없습니다: {self.model_path}")
-            try:
-                # 다운로드 스크립트 임포트 및 실행
-                from .download_model import download_and_convert_model
-                logger.info("모델 다운로드 및 변환을 시도합니다...")
-                download_and_convert_model(self.MODEL_NAME, self.model_dir)
-            except Exception as e:
-                logger.error(f"모델 다운로드 실패: {str(e)}")
-                logger.info("모델을 수동으로 다운로드하려면 다음 명령어를 실행하세요:")
-                logger.info(f"python app/download_model.py --model {self.MODEL_NAME} --output {self.model_dir}")
-                return None
-            
-        # 모델 로딩
-        try:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_path,
-                model_type=self.MODEL_TYPE,
-                config={'max_new_tokens': 512, 'temperature': 0.7, 'context_length': 2048}
-            )
-            logger.info(f"모델 로딩 완료: {time.time() - start_time:.2f}초 소요")
-            return self.model
-        except Exception as e:
-            logger.error(f"모델 로딩 실패: {str(e)}")
-            return None
+        # 임베딩 모델 로드 (더 가볍고 빠름)
+        self._load_embedding_model()
     
-    def get_model_info(self) -> dict:
-        """모델 정보를 반환합니다."""
-        if self.model is None:
-            self.load_model()
+    def _load_embedding_model(self):
+        """임베딩 모델 로드"""
+        try:
+            logger.info(f"임베딩 모델 로드 중: {self.EMBEDDING_MODEL}")
+            self.embedding_model = SentenceTransformer(self.EMBEDDING_MODEL)
+            logger.info("임베딩 모델 로드 완료")
+        except Exception as e:
+            logger.error(f"임베딩 모델 로드 중 오류 발생: {str(e)}")
+            raise
+    
+    def load_model(self):
+        """모델 및 토크나이저 로드 (필요시에만)"""
+        # 이미 로드된 경우 스킵
+        if self.model is not None:
+            return
             
-        info = {
-            "model_name": self.MODEL_NAME,
-            "model_type": self.MODEL_TYPE,
-            "model_path": self.model_path,
-            "loaded": self.model is not None,
-        }
-        logger.info(f"모델 정보 요청: {info}")
-        return info
+        try:
+            # 모델 경로 설정
+            model_path = self.model_path
+            
+            # 디렉토리가 존재하는지 확인
+            if os.path.isdir(model_path):
+                logger.info(f"모델 로드 중: {model_path}")
+                start_time = time.time()
+                
+                # 토크나이저만 먼저 로드
+                self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+                logger.info(f"토크나이저 로드 완료 ({time.time() - start_time:.2f}초)")
+                
+                # 필요할 때 전체 모델 로드 (지연 로딩)
+                # self.model = AutoModelForCausalLM.from_pretrained(
+                #     model_path,
+                #     torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+                # ).to(self.device)
+                
+                logger.info(f"모델 지연 로딩 설정 완료 (디바이스: {self.device})")
+            else:
+                logger.error(f"모델 디렉토리가 존재하지 않습니다: {model_path}")
         
-    def is_model_loaded(self) -> bool:
-        """모델이 로드되었는지 여부를 반환합니다."""
-        return self.model is not None
+        except Exception as e:
+            logger.error(f"모델 로드 중 오류 발생: {str(e)}")
+            raise
+    
+    def get_embeddings(self, text):
+        """
+        텍스트의 임베딩 생성
+        
+        Args:
+            text: 임베딩할 텍스트
+            
+        Returns:
+            numpy.ndarray: 임베딩 벡터
+        """
+        try:
+            # SentenceTransformer를 사용하여 임베딩 생성 (더 빠르고 최적화됨)
+            embedding = self.embedding_model.encode(text, convert_to_numpy=True)
+            
+            # 정규화
+            embedding_norm = embedding / np.linalg.norm(embedding)
+            
+            return embedding_norm
+            
+        except Exception as e:
+            logger.error(f"임베딩 생성 중 오류 발생: {str(e)}")
+            raise
+    
+    def generate_text(self, prompt, max_length=100, temperature=0.7):
+        """
+        주어진 프롬프트에서 텍스트 생성
+        
+        Args:
+            prompt: 생성의 시작점
+            max_length: 최대 생성 길이
+            temperature: 생성 다양성 (높을수록 다양함)
+            
+        Returns:
+            str: 생성된 텍스트
+        """
+        try:
+            # 모델이 로드되지 않았으면 로드
+            if self.model is None:
+                logger.info("텍스트 생성을 위해 전체 모델 로드 중...")
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_path,
+                    torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+                ).to(self.device)
+                logger.info("전체 모델 로드 완료")
+            
+            # 토크나이저가 로드되지 않았으면 로드
+            if self.tokenizer is None:
+                self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+            
+            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            
+            # 텍스트 생성
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    inputs.input_ids,
+                    max_length=max_length,
+                    temperature=temperature,
+                    do_sample=True,
+                    top_p=0.95,
+                    pad_token_id=self.tokenizer.eos_token_id
+                )
+            
+            # 디코딩하여 텍스트 반환
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            return generated_text
+            
+        except Exception as e:
+            logger.error(f"텍스트 생성 중 오류 발생: {str(e)}")
+            # 간단한 대체 응답 제공
+            return f"죄송합니다. 응답을 생성하는 중 오류가 발생했습니다: {str(e)}"
 
 # 싱글톤 인스턴스
 model_manager = ModelManager() 

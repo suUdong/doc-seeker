@@ -1,76 +1,87 @@
 import os
 import logging
-from pathlib import Path
+from logging.handlers import RotatingFileHandler
 
-# 로그 디렉토리 생성
-log_dir = os.path.join(os.path.dirname(__file__), '../logs')
-Path(log_dir).mkdir(parents=True, exist_ok=True)
+# 로그 디렉토리 설정
+LOG_DIR = os.environ.get("LOG_DIR", "/app/logs")
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR, exist_ok=True)
 
-# 로깅 포맷 정의
+# 로거 포맷 설정
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-def setup_logger(logger_name, log_file=None, level=logging.INFO):
+def get_logger(name: str, level=logging.INFO) -> logging.Logger:
     """
-    로거를 설정하고 반환합니다.
+    로거 인스턴스 생성
     
     Args:
-        logger_name: 로거 이름
-        log_file: 로그 파일 이름 (없으면 콘솔만 사용)
+        name: 로거 이름
         level: 로깅 레벨
         
     Returns:
-        설정된
+        logging.Logger: 로거 인스턴스
     """
-    logger = logging.getLogger(logger_name)
+    # 로거 생성
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
     
-    # 이미 핸들러가 설정된 경우 새로 설정하지 않음
+    # 로거가 이미 핸들러를 가지고 있으면 기존 핸들러 유지
     if logger.handlers:
         return logger
-        
-    logger.setLevel(level)
-    formatter = logging.Formatter(LOG_FORMAT)
     
     # 콘솔 핸들러 추가
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
+    console_handler.setLevel(level)
+    console_format = logging.Formatter(LOG_FORMAT, DATE_FORMAT)
+    console_handler.setFormatter(console_format)
+    
+    # 파일 핸들러 추가
+    log_file = os.path.join(LOG_DIR, f"{name}.log")
+    file_handler = RotatingFileHandler(
+        log_file, 
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=5
+    )
+    file_handler.setLevel(level)
+    file_format = logging.Formatter(LOG_FORMAT, DATE_FORMAT)
+    file_handler.setFormatter(file_format)
+    
+    # 핸들러 등록
     logger.addHandler(console_handler)
-    
-    # 파일 핸들러 추가 (파일명이 지정된 경우)
-    if log_file:
-        file_handler = logging.FileHandler(
-            os.path.join(log_dir, log_file), 
-            mode='a'
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-    
-    # 로그가 상위 로거로 전파되지 않도록 설정
-    logger.propagate = False
+    logger.addHandler(file_handler)
     
     return logger
 
 # 미리 정의된 로거들
-app_logger = setup_logger('app', 'app.log')
-model_logger = setup_logger('model_manager', 'model_manager.log')
-generation_logger = setup_logger('generation', 'generation.log')
-embedding_logger = setup_logger('embedding', 'embedding.log')
-retrieval_logger = setup_logger('retrieval', 'retrieval.log')
+app_logger = get_logger('app')
+model_logger = get_logger('model_manager')
+generation_logger = get_logger('generation')
+embedding_logger = get_logger('embedding')
+retrieval_logger = get_logger('retrieval')
 
 # 로거 가져오기 함수
-def get_logger(name):
+def get_named_logger(name):
     """
-    이름에 따라 미리 설정된 로거를 반환하거나, 새 로거를 생성합니다.
+    이름으로 로거 가져오기
+    
+    Args:
+        name: 로거 이름
+        
+    Returns:
+        logger: 로거 인스턴스
     """
-    if name == 'app':
-        return app_logger
-    elif name == 'model_manager':
-        return model_logger
-    elif name == 'generation':
-        return generation_logger
-    elif name == 'embedding':
-        return embedding_logger
-    elif name == 'retrieval':
-        return retrieval_logger
+    # 미리 정의된 로거 중에서 찾기
+    predefined = {
+        'app': app_logger,
+        'model_manager': model_logger,
+        'generation': generation_logger,
+        'embedding': embedding_logger,
+        'retrieval': retrieval_logger
+    }
+    
+    if name in predefined:
+        return predefined[name]
     else:
-        # 정의되지 않은 이름은 새 로거 생성
-        return setup_logger(name, f'{name}.log') 
+        # 정의되지 않은 이름은, 새 로거 생성
+        return get_logger(name) 

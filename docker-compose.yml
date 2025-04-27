@@ -24,10 +24,10 @@ services:
       - ./app:/app/app # 코드 변경 즉시 반영
       - ./requirements.txt:/app/requirements.txt
       - model_cache:/root/.cache/torch/sentence_transformers/ # 모델 캐시 유지
-      - model_data:/app/models # 모델 데이터를 영구 저장할 볼륨
+      # - model_data:/app/models # 모델 데이터를 영구 저장할 볼륨 (로컬 마운트로 대체)
       - logs_data:/app/logs # 로그 데이터도 영구 저장
-      # 로컬에 다운로드한 모델 파일을 마운트 (파일이 존재하는 경우 주석 해제)
-      # - ./models/polyglot-ko-1.3b.gguf:/app/models/polyglot-ko-1.3b.gguf
+      # 로컬에 다운로드한 모델 디렉토리 마운트
+      - ./models:/app/models
     environment:
       - QDRANT_URL=http://qdrant:6333
       - OMP_NUM_THREADS=1
