@@ -20,15 +20,22 @@ COPY requirements.txt .
 
 # pip 설정 파일 생성 - 타임아웃 증가 및 재시도 설정
 RUN mkdir -p /root/.config/pip && \
-    echo "[global]\ntimeout = 180\nretries = 5\ntrusted-host = files.pythonhosted.org pypi.org" > /root/.config/pip/pip.conf
+    echo "[global]\ntimeout = 600\nretries = 10\ntrusted-host = files.pythonhosted.org pypi.org" > /root/.config/pip/pip.conf
 
 # 패키지 분할 설치 (안정성 향상)
 # 먼저 필수 패키지 설치
 RUN pip install pip --upgrade && \
-    pip install setuptools wheel && \
-    pip install -r requirements.txt
+    pip install setuptools wheel
 
-# 추가 패키지 설치
+# --- PyTorch CPU 버전 명시적 설치 시작 ---
+# requirements.txt 처리 전에 PyTorch CPU 버전을 설치하여 CUDA 패키지 다운로드 방지
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+# --- PyTorch CPU 버전 명시적 설치 끝 ---
+
+# requirements.txt 에서 나머지 패키지 설치 (torch는 이미 CPU 버전으로 설치됨)
+RUN pip install -r requirements.txt
+
+# 추가 패키지 설치 (이 부분은 필요에 따라 requirements.txt로 옮기는 것을 고려)
 RUN pip install ctransformers==0.2.27 huggingface-hub==0.20.3
 
 # llama-cpp-python 패키지 설치 (별도 명령으로 분리)
@@ -40,6 +47,8 @@ RUN mkdir -p models logs
 
 # 애플리케이션 코드 복사
 COPY app/ app/
+# 스크립트 폴더 복사
+COPY scripts/ scripts/
 
 # 엔트리포인트 스크립트 복사 및 실행 권한 부여
 COPY entrypoint.sh .

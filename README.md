@@ -108,6 +108,16 @@ docker-compose up --build -d
 - FastAPI: http://localhost:8000
 - Qdrant: http://localhost:6333
 
+## 🧪 테스트
+
+프로젝트는 다층적 테스트 아키텍처를 갖추고 있습니다:
+
+- 단위 테스트: 개별 모듈 기능 검증
+- 통합 테스트: 모듈 간 상호작용 검증
+- 엔드투엔드 테스트: 전체 시스템 검증
+
+상세한 테스트 정보는 [README_TEST.md](README_TEST.md)를 참조하세요.
+
 ## 🌟 로드맵 (기업 준비도)
 
 ## 🚫 라이센스
