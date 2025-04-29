@@ -2,12 +2,12 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import logging
 
-# Import from the new core structure
-from app.core.config import AppConfig # Assuming AppConfig is still needed, adjust if not
+# Adjust imports for app structure (reverting from src)
+from app.core.config import AppConfig
 from app.core.logger import get_logger
-from app.core import dependencies # Import dependencies module if needed for lifespan
+from app.core import dependencies
 
-# Import the main API router
+# Adjust API router import
 from app.api.v1.base import api_router as api_v1_router
 
 logger = get_logger("main") # Use logger from core
@@ -33,8 +33,8 @@ def create_app() -> FastAPI:
     logger.info("Creating FastAPI application instance.")
     app = FastAPI(
         title="DocSeeker API",
-        description="문서 기반 질의응답 REST API (Refactored Structure)",
-        version="1.2.0", # Updated version maybe
+        description="문서 기반 질의응답 REST API (DDD/Clean Arch Structure)", # Updated description
+        version="2.0.0", # Updated version maybe
         lifespan=lifespan # Include lifespan manager
     )
 
@@ -54,10 +54,4 @@ def create_app() -> FastAPI:
     logger.info("Application creation complete.")
     return app
 
-app = create_app()
-
-# --- Removed Code Sections ---
-# - Dependency functions (moved to dependencies.py)
-# - Pydantic models (moved to schemas.py in feature folders)
-# - Endpoint definitions (moved to router.py in feature folders)
-# - Background task definition (moved to tasks.py)
+app = create_app() 

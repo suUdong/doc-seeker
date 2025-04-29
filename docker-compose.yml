@@ -9,7 +9,8 @@ services:
     environment:
       QDRANT__SERVICE__GRACEFUL_SHUTDOWN: "true"
     volumes:
-      - qdrant_data:/qdrant/storage
+      - qdrant-data:/qdrant/storage
+    restart: unless-stopped
 
   api:
     build:
@@ -21,20 +22,17 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app/app # 코드 변경 즉시 반영
-      - ./requirements.txt:/app/requirements.txt
-      - model_cache:/root/.cache/torch/sentence_transformers/ # 모델 캐시 유지
-      # - model_data:/app/models # 모델 데이터를 영구 저장할 볼륨 (로컬 마운트로 대체)
-      - logs_data:/app/logs # 로그 데이터도 영구 저장
-      # 로컬에 다운로드한 모델 디렉토리 마운트
-      - ./models:/app/models
+      - ./app:/code/app
+      - ./requirements.txt:/code/requirements.txt
+      - ./models:/code/models
+      - ./logs:/code/logs
+      - ./.cache:/root/.cache
     environment:
       - QDRANT_URL=http://qdrant:6333
+      - MODEL_PATH=/code/models/polyglot-ko-1.3b.gguf
+      - LOG_LEVEL=INFO
       - OMP_NUM_THREADS=1
-      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
 
 volumes:
-  qdrant_data:
-  model_cache: # 모델 캐시용 볼륨 추가
-  model_data: # 영구적인 모델 데이터 볼륨
-  logs_data: # 영구적인 로그 데이터 볼륨
+  qdrant-data:

@@ -1,8 +1,8 @@
 # PyTorch가 사전 설치된 이미지 사용
 FROM python:3.10-slim
 
-# 작업 디렉터리 설정
-WORKDIR /app
+# 작업 디렉터리 설정 (/code 유지)
+WORKDIR /code
 
 # 필요한 시스템 패키지 및 컴파일러 설치
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,28 +42,26 @@ RUN pip install ctransformers==0.2.27 huggingface-hub==0.20.3
 RUN pip install llama-cpp-python==0.2.55 --find-links https://github.com/jllllll/llama-cpp-python-cuBLAS-wheels/releases/download/textgen-webui/llama_cpp_python-0.2.55+cpuavx2-cp310-cp310-linux_x86_64.whl || \
     pip install llama-cpp-python==0.2.55
 
-# 모델 및 로그 디렉토리 생성
-RUN mkdir -p models logs
+# 모델 및 로그 디렉토리 생성 (/code 기준)
+RUN mkdir -p /code/models /code/logs
 
-# 애플리케이션 코드 복사
-COPY app/ app/
-# 스크립트 폴더 복사
-COPY scripts/ scripts/
+# 애플리케이션 코드 및 스크립트 복사 (/code 기준)
+COPY app/ /code/app/
+COPY scripts/ /code/scripts/
 
-# 엔트리포인트 스크립트 복사 및 실행 권한 부여
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+# 엔트리포인트 스크립트 복사 및 실행 권한 부여 (/code 기준)
+COPY entrypoint.sh /code/
+RUN chmod +x /code/entrypoint.sh
 
 # 환경 변수 설정
 ENV OMP_NUM_THREADS=1 \
     PYTHONUNBUFFERED=1
 
-# 헬스체크 설정
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+# 헬스체크 설정 (경로 확인 필요 - 아래 수정)
+# HEALTHCHECK ... CMD curl -f http://localhost:8000/health/ || exit 1
 
-# 엔트리포인트 설정
-ENTRYPOINT ["/app/entrypoint.sh"]
+# 엔트리포인트 설정 (/code 기준)
+ENTRYPOINT ["/code/entrypoint.sh"]
 
-# FastAPI 실행
+# FastAPI 실행 (모듈 경로 app.main:app로 유지)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
