@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import logging
 from pathlib import Path
-from huggingface_hub import snapshot_download
+from huggingface_hub import snapshot_download, hf_hub_download
 
 # 로깅 설정 (스크립트 실행 시 사용)
 logging.basicConfig(
@@ -19,6 +19,53 @@ logging.basicConfig(
 logger = logging.getLogger('model_downloader_script')
 
 DEFAULT_MODEL_DIR = "./models" # 프로젝트 루트 기준 models 폴더
+DEFAULT_GGUF_DIR = "./models/gguf" # GGUF 모델용 디렉토리
+
+def download_gguf_model(model_name, output_dir=DEFAULT_GGUF_DIR, skip_if_exists=True):
+    """
+    GGUF 포맷 모델을 HuggingFace에서 다운로드합니다.
+    
+    Args:
+        model_name (str): HuggingFace 모델 이름
+        output_dir (str): GGUF 모델을 저장할 디렉토리 경로
+        skip_if_exists (bool): 해당 경로에 모델 파일이 이미 존재하면 다운로드를 건너뛸지 여부
+    """
+    # 모델 파일명을 정의
+    gguf_filename = "polyglot-ko-1.3b.gguf"
+    local_model_path = Path(output_dir) / gguf_filename
+
+    logger.info(f"GGUF 모델 저장 경로 확인: {local_model_path.resolve()}")
+
+    # 디렉토리 및 파일 존재 확인
+    if skip_if_exists and local_model_path.exists():
+        logger.info(f"GGUF 모델 파일이 이미 존재합니다: {local_model_path}")
+        return str(local_model_path)
+
+    # 출력 디렉토리 생성
+    os.makedirs(output_dir, exist_ok=True)
+    
+    logger.info(f"HuggingFace에서 GGUF 모델 다운로드 시작: {model_name} -> {local_model_path}")
+    try:
+        # GGUF 모델 파일 직접 다운로드 
+        # 참고: 실제 repo_id와 filename은 필요에 따라 조정해야 함
+        hf_hub_download(
+            repo_id="TheBloke/polyglot-ko-1.3B-GGUF",  # GGUF 버전 레포
+            filename="polyglot-ko-1.3b.q4_0.gguf",  # 실제 파일명 (크기가 작은 quantized 버전 선택)
+            local_dir=output_dir,
+            local_dir_use_symlinks=False,
+        )
+        
+        # 필요에 따라 다운로드된 파일명을 원하는 이름으로 변경
+        downloaded_file = Path(output_dir) / "polyglot-ko-1.3b.q4_0.gguf"
+        if downloaded_file.exists() and downloaded_file != local_model_path:
+            shutil.move(str(downloaded_file), str(local_model_path))
+        
+        logger.info(f"GGUF 모델 다운로드 및 저장 완료: {local_model_path}")
+        return str(local_model_path)
+
+    except Exception as e:
+        logger.error(f"GGUF 모델 다운로드 실패: {e}")
+        return None  # 실패 시 None 반환
 
 def download_model(model_name, output_dir=DEFAULT_MODEL_DIR, skip_if_exists=True):
     """
@@ -91,30 +138,67 @@ if __name__ == "__main__":
         help=f"모델을 저장할 디렉토리 (기본값: {DEFAULT_MODEL_DIR})"
     )
     parser.add_argument(
+        "--gguf-dir", 
+        type=str, 
+        default=DEFAULT_GGUF_DIR,
+        help=f"GGUF 모델을 저장할 디렉토리 (기본값: {DEFAULT_GGUF_DIR})"
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="모델 디렉토리가 이미 존재해도 강제로 다시 다운로드합니다."
     )
+    parser.add_argument(
+        "--gguf-only",
+        action="store_true",
+        help="GGUF 모델만 다운로드합니다."
+    )
     
     args = parser.parse_args()
     
-    logger.info(f"모델 다운로드 요청: {args.model}")
-    # output_dir 인자가 절대 경로가 아니면, 스크립트 실행 위치 기준으로 경로 해석
-    output_path = Path(args.output_dir)
-    if not output_path.is_absolute():
-        output_path = Path.cwd() / output_path
-    logger.info(f"저장 위치: {output_path.resolve()}")
-    logger.info(f"강제 다운로드: {'Yes' if args.force else 'No'}")
+    logger.info(f"모델 다운로드 요청 시작")
     
-    downloaded_path = download_model(
-        args.model, 
-        str(output_path), # 절대 경로 또는 의도된 경로 전달 
+    # GGUF 디렉토리 경로 준비
+    gguf_path = Path(args.gguf_dir)
+    if not gguf_path.is_absolute():
+        gguf_path = Path.cwd() / gguf_path
+    logger.info(f"GGUF 저장 위치: {gguf_path.resolve()}")
+    
+    # GGUF 모델 다운로드
+    gguf_downloaded_path = download_gguf_model(
+        args.model,
+        str(gguf_path),
         skip_if_exists=not args.force
     )
     
-    if downloaded_path:
-        logger.info(f"스크립트 실행 완료. 모델 위치: {downloaded_path}")
-        sys.exit(0)
+    if gguf_downloaded_path:
+        logger.info(f"GGUF 모델 다운로드 완료: {gguf_downloaded_path}")
     else:
-        logger.error("스크립트 실행 중 오류 발생.")
-        sys.exit(1) 
+        logger.error("GGUF 모델 다운로드 실패")
+        sys.exit(1)
+    
+    # 일반 모델 다운로드 (--gguf-only가 지정되지 않은 경우)
+    if not args.gguf_only:
+        # output_dir 인자가 절대 경로가 아니면, 스크립트 실행 위치 기준으로 경로 해석
+        output_path = Path(args.output_dir)
+        if not output_path.is_absolute():
+            output_path = Path.cwd() / output_path
+        logger.info(f"일반 모델 저장 위치: {output_path.resolve()}")
+        
+        downloaded_path = download_model(
+            args.model, 
+            str(output_path),
+            skip_if_exists=not args.force
+        )
+        
+        if downloaded_path:
+            logger.info(f"일반 모델 다운로드 완료: {downloaded_path}")
+        else:
+            logger.error("일반 모델 다운로드 실패")
+            if gguf_downloaded_path:
+                logger.info("GGUF 모델은 다운로드 성공, 계속 진행합니다.")
+            else:
+                sys.exit(1)
+    
+    logger.info(f"스크립트 실행 완료. GGUF 모델 위치: {gguf_downloaded_path}")
+    sys.exit(0) 

@@ -29,7 +29,7 @@ services:
       - ./.cache:/root/.cache
     environment:
       - QDRANT_URL=http://qdrant:6333
-      - MODEL_PATH=/code/models/polyglot-ko-1.3b.gguf
+      - MODEL_PATH=/code/models/gguf/polyglot-ko-1.3b.gguf
       - LOG_LEVEL=INFO
       - OMP_NUM_THREADS=1
     restart: unless-stopped

@@ -3,6 +3,7 @@ from functools import lru_cache
 from fastapi import Depends
 import logging
 from qdrant_client import QdrantClient
+from typing import Optional
 
 # Core components
 from app.core.config import AppConfig
@@ -43,7 +44,11 @@ logger = get_logger("core.dependencies")
 
 @lru_cache()
 def get_app_config() -> AppConfig:
-    """애플리케이션 설정 제공"""
+    """
+    애플리케이션 설정을 가져옵니다.
+    환경 변수와 프로필 설정에 따라 적절한 설정이 로드됩니다.
+    결과는 캐시되어 반복 호출 시 성능을 향상시킵니다.
+    """
     try:
         return AppConfig()
     except Exception as e:
@@ -239,3 +244,59 @@ def get_chat_use_case(
 
 # Add other dependencies like DocumentProcessor if needed
 # ... 
+
+def get_storage_config(config: AppConfig = Depends(get_app_config)):
+    """스토리지 관련 설정을 반환합니다."""
+    return {
+        "storage_type": config.STORAGE_TYPE,
+        "local_storage_path": config.LOCAL_STORAGE_PATH,
+        "s3_bucket": config.S3_BUCKET,
+        "s3_region": config.S3_REGION
+    }
+
+def get_model_config(config: AppConfig = Depends(get_app_config)):
+    """모델 관련 설정을 반환합니다."""
+    return {
+        "model_base_path": config.MODEL_BASE_PATH,
+        "embedding_model_id": config.EMBEDDING_MODEL_ID,
+        "embedding_batch_size": config.EMBEDDING_BATCH_SIZE,
+        "generation_model_type": config.GENERATION_MODEL_TYPE,
+        "generation_model_id": config.GENERATION_MODEL_ID,
+        "generation_model_gguf_filename": config.GENERATION_MODEL_GGUF_FILENAME,
+        "model_path": config.get_model_path(),
+        "embedding_path": config.get_embedding_path()
+    }
+
+def get_generation_config(config: AppConfig = Depends(get_app_config)):
+    """생성 모델 관련 설정을 반환합니다."""
+    if config.GENERATION_MODEL_TYPE == "gguf":
+        return {
+            "gpu_layers": config.GPU_LAYERS,
+            "context_length": config.CT_CONTEXT_LENGTH,
+            "max_new_tokens": config.CT_MAX_NEW_TOKENS,
+            "temperature": config.CT_TEMPERATURE,
+            "top_p": config.CT_TOP_P
+        }
+    else:
+        return {
+            "max_answer_length": config.MAX_ANSWER_LENGTH,
+            "temperature": config.GENERATION_TEMPERATURE,
+            "top_p": config.GENERATION_TOP_P
+        }
+
+def get_qdrant_config(config: AppConfig = Depends(get_app_config)):
+    """Qdrant 관련 설정을 반환합니다."""
+    return {
+        "host": config.QDRANT_HOST,
+        "port": config.QDRANT_PORT,
+        "collection_name": config.QDRANT_COLLECTION_NAME,
+        "score_threshold": config.QDRANT_SCORE_THRESHOLD
+    }
+
+def get_environment_info(config: AppConfig = Depends(get_app_config)):
+    """현재 실행 환경 정보를 반환합니다."""
+    return {
+        "environment": config.ENVIRONMENT,
+        "env_profile": config.ENV_PROFILE,
+        "debug": config.DEBUG
+    } 
